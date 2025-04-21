@@ -1,42 +1,40 @@
-let wasVisible = true;
-let pipActive = false;
+console.log("📺 Auto PiP Streaming: content script loaded");
 
-// Fonction pour détecter le bouton Picture-in-Picture selon les plateformes
-function getPiPButton() {
-  const titles = document.querySelectorAll('title, [title]');
-  for (const el of titles) {
-    if (el.innerText?.includes('Picture In Picture') || el.getAttribute?.('title') === 'Picture In Picture') {
-      return el.closest('button') || el.closest('div');
+function waitForVideoElement(callback) {
+  const check = setInterval(() => {
+    const video = document.querySelector("video");
+    if (video) {
+      clearInterval(check);
+      callback(video);
     }
-  }
-  const svgMatches = document.querySelectorAll('svg, g');
-  for (const svg of svgMatches) {
-    const title = svg.querySelector('title');
-    if (title && title.textContent === 'Picture In Picture') {
-      return svg.closest('button') || svg.closest('div');
+  }, 500);
+}
+
+function setupAutoPiP(video) {
+  document.addEventListener("visibilitychange", async () => {
+    const video = document.querySelector("video");
+
+    if (!video) return;
+
+    if (document.hidden) {
+      try {
+        if (document.pictureInPictureElement !== video) {
+          await video.requestPictureInPicture();
+        }
+      } catch (err) {
+      }
+    } else {
+      if (document.pictureInPictureElement === video) {
+        try {
+          await document.exitPictureInPicture();
+        } catch (err) {
+        }
+      }
     }
-  }
-  return null;
+  });
+
 }
 
-function isPlaying() {
-  const video = document.querySelector('video');
-  return video && !video.paused && !video.ended;
-}
-
-function triggerPiP(toggle = true) {
-  const button = getPiPButton();
-  if (button) {
-    button.click();
-    pipActive = toggle;
-  }
-}
-
-// Gère le changement de visibilité de l’onglet
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden && isPlaying()) {
-    triggerPiP(true);
-  } else if (!document.hidden && pipActive) {
-    triggerPiP(false);
-  }
+waitForVideoElement((video) => {
+  setupAutoPiP(video);
 });
