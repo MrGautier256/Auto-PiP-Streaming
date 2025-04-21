@@ -9,57 +9,61 @@ function waitForVideoElement(callback) {
 }
 
 function setupAutoPiP(video) {
-  document.addEventListener("visibilitychange", async () => {
-    if (!video) return;
+  function shouldRun(callback) {
+    chrome.storage.sync.get(["enabled"], (result) => {
+      if (result.enabled !== false) {
+        callback();
+      }
+    });
+  }
 
-    if (document.hidden) {
-      try {
-        if (document.pictureInPictureElement !== video) {
-          await video.requestPictureInPicture();
-        }
-      } catch (err) {
-        console.warn("Erreur PiP (changement onglet):", err.message);
-      }
-    } else {
-      if (document.pictureInPictureElement === video) {
+  document.addEventListener("visibilitychange", () => {
+    shouldRun(async () => {
+      if (!video) return;
+      if (document.hidden) {
         try {
-          await document.exitPictureInPicture();
-        } catch (err) {
-          console.warn("Erreur sortie PiP:", err.message);
+          if (document.pictureInPictureElement !== video) {
+            await video.requestPictureInPicture();
+          }
+        } catch (err) { }
+      } else {
+        if (document.pictureInPictureElement === video) {
+          try {
+            await document.exitPictureInPicture();
+          } catch (err) { }
         }
       }
-    }
+    });
   });
 
-  // Gestion de la réduction de la fenêtre
   let lastWasMinimized = false;
 
-  window.addEventListener("blur", async () => {
-    setTimeout(async () => {
-      if (window.outerWidth <= 160 && window.outerHeight <= 160) {
-        lastWasMinimized = true;
-        if (video && document.pictureInPictureElement !== video) {
-          try {
-            await video.requestPictureInPicture();
-            console.log("🎬 PiP activé après réduction fenêtre");
-          } catch (err) {
-            console.warn("Erreur PiP (réduction fenêtre):", err.message);
+  window.addEventListener("blur", () => {
+    setTimeout(() => {
+      shouldRun(async () => {
+        if (window.outerWidth <= 160 && window.outerHeight <= 160) {
+          lastWasMinimized = true;
+          if (document.pictureInPictureElement !== video) {
+            try {
+              await video.requestPictureInPicture();
+            } catch (err) { }
           }
         }
-      }
+      });
     }, 300);
   });
 
-  window.addEventListener("focus", async () => {
-    if (lastWasMinimized) {
-      lastWasMinimized = false;
-      if (document.pictureInPictureElement === video) {
-        try {
-          await document.exitPictureInPicture();
-        } catch (err) {
+  window.addEventListener("focus", () => {
+    shouldRun(async () => {
+      if (lastWasMinimized) {
+        lastWasMinimized = false;
+        if (document.pictureInPictureElement === video) {
+          try {
+            await document.exitPictureInPicture();
+          } catch (err) { }
         }
       }
-    }
+    });
   });
 }
 

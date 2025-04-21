@@ -2,13 +2,23 @@
   "name": "Auto PiP Streaming",
   "version": "1.0",
   "manifest_version": 3,
-  "description": "Auto activate Picture in Picture when tab is not visible",
+  "description": "Auto activate Picture in Picture when tab is not visible or minimized",
   "content_scripts": [
     {
       "matches": [
+        "*://*.paramountplus.com/*",
         "*://*.netflix.com/*",
+        "*://*.netflix.com/*",
+        "*://*.hbomax.com/*",
+        "*://*.apple.com/*",
+        "*://*.disneyplus.com/*",
+        "*://*.hulu.com/*",
+        "*://*.peacocktv.com/*",
         "*://*.primevideo.com/*",
-        "*://*.disneyplus.com/*"
+        "*://*.amazon.com/*",
+        "*://*.amazon.co.uk/*",
+        "*://*.amazon.de/*",
+        "*://*.amazon.co.jp/*"
       ],
       "js": [
         "content.js"
@@ -17,18 +27,19 @@
     }
   ],
   "permissions": [
-    "scripting"
+    "storage"
   ],
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
   "action": {
+    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   }
 }
